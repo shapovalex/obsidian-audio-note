@@ -1,0 +1,17 @@
+[project]
+name = "personal-projects"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydub>=0.25.1",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "openai-whisper>=20250625",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
