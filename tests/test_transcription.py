@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from src.audio_converter import transcribe_mp3
+from src.transcriber import transcribe_mp3
 
 
 class TestTranscribeMp3:

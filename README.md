@@ -6,6 +6,7 @@ A Python project for audio file conversion and transcription using pydub and Ope
 
 - **Audio Conversion**: Convert any audio file format to MP3 using pydub
 - **Audio Transcription**: Transcribe MP3 files to text using OpenAI Whisper
+- **File Discovery**: Find M4A and QTA files in directories with optional timestamp filtering
 
 ## Installation
 
@@ -57,17 +58,50 @@ text = transcribe_mp3("audio.mp3", model="tiny")
 - **medium**: High accuracy, slow (~769M parameters)
 - **large**: Best accuracy, slowest (~1550M parameters)
 
+### Find Audio Files in Directory
+
+```python
+from src.file_utils import find_audio_files, find_audio_files_recursive
+import time
+
+# Find all M4A and QTA files in a directory
+audio_files = find_audio_files("/path/to/directory")
+for file in audio_files:
+    print(f"Found: {file}")
+
+# Find files created after a specific time
+yesterday = time.time() - 86400  # 24 hours ago
+recent_files = find_audio_files("/path/to/directory", timestamp=yesterday)
+
+# Search recursively in subdirectories
+all_files = find_audio_files_recursive("/path/to/directory")
+```
+
 ### Combined Example
 
 ```python
 from src.audio_converter import convert_to_mp3, transcribe_mp3
+from src.file_utils import find_audio_files
+import time
 
-# Convert audio file to MP3
-convert_to_mp3("recording.wav", "recording.mp3")
+# Find all recent M4A files
+yesterday = time.time() - 86400
+m4a_files = find_audio_files("/path/to/recordings", timestamp=yesterday)
 
-# Transcribe the MP3
-transcription = transcribe_mp3("recording.mp3", model="base")
-print(f"Transcription: {transcription}")
+# Process each file: convert and transcribe
+for m4a_file in m4a_files:
+    # Convert to MP3
+    mp3_file = m4a_file.with_suffix('.mp3')
+    convert_to_mp3(m4a_file, mp3_file)
+    
+    # Transcribe
+    transcription = transcribe_mp3(mp3_file, model="base")
+    
+    # Save transcription
+    txt_file = mp3_file.with_suffix('.txt')
+    txt_file.write_text(transcription)
+    
+    print(f"Processed: {m4a_file.name}")
 ```
 
 ## Running Tests
@@ -91,11 +125,13 @@ uv run pytest tests/test_transcription.py -v
 .
 ├── src/
 │   ├── __init__.py
-│   └── audio_converter.py      # Main module with conversion and transcription functions
+│   ├── audio_converter.py      # Audio conversion and transcription functions
+│   └── file_utils.py           # File discovery and filtering utilities
 ├── tests/
 │   ├── __init__.py
 │   ├── test_audio_converter.py # Tests for audio conversion
-│   └── test_transcription.py   # Tests for audio transcription
+│   ├── test_transcription.py   # Tests for audio transcription
+│   └── test_file_utils.py      # Tests for file utilities
 ├── pyproject.toml              # Project dependencies and configuration
 └── README.md                   # This file
 ```
@@ -130,10 +166,41 @@ Transcribe an MP3 file to text using OpenAI Whisper.
 - `FileNotFoundError`: If MP3 file doesn't exist
 - `Exception`: If transcription fails
 
+### `find_audio_files(directory, timestamp=None)`
+
+Find all M4A and QTA files in a directory (non-recursive).
+
+**Parameters:**
+- `directory` (str | Path): Path to directory to search
+- `timestamp` (float, optional): Unix timestamp. If provided, only return files created after this time
+
+**Returns:**
+- `List[Path]`: List of Path objects, sorted by creation time (newest first)
+
+**Raises:**
+- `FileNotFoundError`: If directory doesn't exist
+- `NotADirectoryError`: If path is not a directory
+
+### `find_audio_files_recursive(directory, timestamp=None)`
+
+Recursively find all M4A and QTA files in a directory and subdirectories.
+
+**Parameters:**
+- `directory` (str | Path): Path to directory to search
+- `timestamp` (float, optional): Unix timestamp filter
+
+**Returns:**
+- `List[Path]`: List of Path objects, sorted by creation time (newest first)
+
+**Raises:**
+- `FileNotFoundError`: If directory doesn't exist
+- `NotADirectoryError`: If path is not a directory
+
 ## Test Results
 
 - **Audio Conversion Tests**: 6 passed, 2 skipped
 - **Transcription Tests**: 6 passed
-- **Total**: 12 passed, 2 skipped
+- **File Utilities Tests**: 15 passed
+- **Total**: 27 passed, 2 skipped
 
 Skipped tests require additional FFmpeg codecs for M4A and QuickTime formats.
