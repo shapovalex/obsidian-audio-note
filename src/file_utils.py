@@ -1,6 +1,7 @@
 """File utility functions for finding and filtering audio files."""
 
 import os
+import time
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -96,6 +97,68 @@ def find_audio_files(
     found_files.sort(key=lambda f: os.path.getctime(f), reverse=True)
     
     return found_files
+
+
+def read_timestamp(filepath: Union[str, Path]) -> Optional[float]:
+    """
+    Read timestamp from a file.
+    
+    Args:
+        filepath: Path to the timestamp file
+        
+    Returns:
+        float: Unix timestamp, or None if file doesn't exist or is invalid
+    """
+    filepath = Path(filepath)
+    
+    if not filepath.exists():
+        return None
+    
+    try:
+        with open(filepath, 'r') as f:
+            content = f.read().strip()
+            return float(content)
+    except (ValueError, IOError):
+        return None
+
+
+def write_timestamp(filepath: Union[str, Path], timestamp: Optional[float] = None) -> None:
+    """
+    Write current timestamp to a file.
+    
+    Args:
+        filepath: Path to the timestamp file
+        timestamp: Optional Unix timestamp to write. If None, uses current time.
+    """
+    filepath = Path(filepath)
+    
+    # Create parent directory if it doesn't exist
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    
+    if timestamp is None:
+        timestamp = time.time()
+    
+    with open(filepath, 'w') as f:
+        f.write(str(timestamp))
+
+
+def write_string_to_file(directory: Union[str, Path], filename: str, content: str) -> None:
+    """
+    Write a string to a file in the specified directory.
+    
+    Args:
+        directory: Path to the directory
+        filename: Name of the file to write
+        content: String content to write to the file
+    """
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    
+    filepath = directory / filename
+    with open(filepath, 'w') as f:
+        f.write(content)
+
+
 
 if __name__ == '__main__':
 
