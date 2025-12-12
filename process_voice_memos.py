@@ -4,15 +4,17 @@ import time
 from src.file_utils import find_audio_files, read_timestamp, write_timestamp, write_string_to_file
 from src.audio_converter import convert_to_mp3
 from src.transcriber import transcribe_mp3
+import os
 
 def generate_timestamp():
     return str(int(time.time()))
 
 def main():
+    home_directory_env = os.getenv("HOME")
     """Main processing function."""
     # Use accessible directory for voice memos
-    voice_memos_dir = "/Users/Oleksii_Shapovalov/Library/Group Containers/group.com.apple.VoiceMemos.shared/Recordings"
-    output_dir = "/Users/Oleksii_Shapovalov/Library/Mobile Documents/iCloud~md~obsidian/Documents/Personal/01_Audio inbox"
+    voice_memos_dir = f"{home_directory_env}/Library/Group Containers/group.com.apple.VoiceMemos.shared/Recordings"
+    output_dir = f"{home_directory_env}/Library/Mobile Documents/iCloud~md~obsidian/Documents/Personal/01_Audio inbox"
 
     timestamp = read_timestamp("last_timestamp.txt")
     audio_files = find_audio_files(voice_memos_dir, timestamp)
